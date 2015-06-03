@@ -1,7 +1,7 @@
 ![left](https://upload.wikimedia.org/wikipedia/en/6/69/Ember.js_Logo_and_Mascot.png)
 ![right](https://scontent-ord1-1.xx.fbcdn.net/hphotos-xpf1/v/t1.0-9/197325_1003018169032_9384_n.jpg?oh=ee0dc9b12d75193399ea4ad7ac2fb2d5&oe=55C0079C)
 
-> Understanding Ember Data
+> Understanding Ember Data by Looking at Internals
 
 ---
 
@@ -338,7 +338,7 @@ export default DS.Model.extend({
 // app/models/post.js
 export default DS.Model.extend({
 
-  comments: {
+  comments: Ember.computed({
 
     get: function(key) {
       var relationship = this._relationships[key];
@@ -352,7 +352,7 @@ export default DS.Model.extend({
       return relationship.getRecords();
     }
 
-  }.meta({type: 'comment', isRelationship: true, options: {},
+  }).meta({type: 'comment', isRelationship: true, options: {},
           kind: 'hasMany', key: "comments"})
 });
 ```
@@ -505,6 +505,27 @@ comment._relationships["post"]
 
 ---
 
+# Keeping Both Sides in Sync (pseudo-code)
+
+```javascript
+
+// (1) get the post's comments relationship
+commentsRel = post._relationships["comments"];
+
+// (2) add comment to post's comments
+commentsRel << comment // (2)
+
+// (3) find "other side" of relationship via inverse
+// Note: it was specified or inferred by the hasMany macro
+// in our Post model. In this example, it is "post"
+postRelKey = comment._relationships[commentsRel.inverseKey]
+
+// (4) Set post as comment's post (updating belongsTo)
+comment._relationships[postRelKey] << post // (3)
+```
+
+---
+
 ![inline](sync-relationships.png)
 
 ^ So if we pick up where we left off from the store
@@ -516,6 +537,12 @@ comment._relationships["post"]
 ^ Open up jsbin to show:
 
 ^ store.typeMaps, store.recordArrayManager, store.recordArrayManager.filteredRecordArrays, model._relationships etc
+
+---
+
+> **Disclaimer**: My understnanding of how ember-data works, not how you should use it.
+
+> Please use the guides on emberjs.com
 
 ---
 
